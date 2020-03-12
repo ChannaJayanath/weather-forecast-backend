@@ -23,16 +23,21 @@ export class PythonService {
       Kurunegala_RF: 'NoRain',
       Maspotha_RF: 'NoRain',
     };
+    let days_to_forecast_FS = 42;
+    let current_FS = 'Critical';
+
     var RunOptions: Options = {
       mode: 'text',
       args: [
         JSON.stringify(days_to_forecast_RF),
         JSON.stringify(current_states_RF),
+        days_to_forecast_FS,
+        current_FS,
       ],
     };
     try {
       let result: any = await pyRunAsync(
-        path.join(__dirname, '../../src/python/scripts/test.py'),
+        path.join(__dirname, '../../src/python/scripts/predict-status.py'),
         <Options>RunOptions,
       );
       console.log(JSON.stringify(result));
