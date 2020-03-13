@@ -2,6 +2,7 @@ import {bind, BindingKey, /* inject, */ BindingScope} from '@loopback/core';
 import * as path from 'path';
 import {PythonShell} from 'python-shell';
 import {promisify} from 'util';
+import {getStatesReq} from '../controllers';
 
 const pyRunAsync = promisify(PythonShell.run);
 
@@ -42,6 +43,45 @@ export class PythonService {
       );
       console.log(JSON.stringify(result));
       return <string[]>result;
+    } catch (e) {
+      console.log(e);
+    } finally {
+      console.log('We finished here python service');
+    }
+  }
+
+  async markovGetStatus(req: getStatesReq) {
+    let days_to_forecast_RF = {
+      Batalagoda_RF: req.daysToForecast,
+      Kurunegala_RF: req.daysToForecast,
+      Maspotha_RF: req.daysToForecast,
+    };
+    let current_states_RF = {
+      Batalagoda_RF: req.currentRainBatalagoda,
+      Kurunegala_RF: req.currentRainKurunegala,
+      Maspotha_RF: req.currentRainMaspota,
+    };
+    let days_to_forecast_FS = req.daysToForecast;
+    let current_FS = req.currentFloodState;
+    console.log(days_to_forecast_RF);
+    console.log(current_states_RF);
+
+    var RunOptions: Options = {
+      mode: 'text',
+      args: [
+        JSON.stringify(days_to_forecast_RF),
+        JSON.stringify(current_states_RF),
+        days_to_forecast_FS,
+        current_FS,
+      ],
+    };
+    try {
+      let result: any = await pyRunAsync(
+        path.join(__dirname, '../../src/python/markov/predict-status.py'),
+        <Options>RunOptions,
+      );
+      // console.log(JSON.parse(result));
+      return JSON.parse(result[0]);
     } catch (e) {
       console.log(e);
     } finally {

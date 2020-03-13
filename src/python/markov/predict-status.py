@@ -5,7 +5,7 @@ import numpy as np
 import collections
 from pathlib import Path
 
-
+output = {}
 ########## function definitions needed for rainfall status forecasting #############
 
 def filterData(data):
@@ -83,74 +83,67 @@ def CalculateTransitionMatrix(data,list):
                         [NNCount/NoRainCount,NLCount/NoRainCount,NHCount/NoRainCount],
   [LNCount/LightRainCount,LLCount/LightRainCount,LHCount/LightRainCount],
   [HNCount/HeavyRainCount,HLCount/HeavyRainCount,HHCount/HeavyRainCount]]
-  print(transitionMatrix)
   return transitionMatrix
 
-def RainFallForecast(days,current,transitionMatrix,isPrint=True):
+def RainFallForecast(days,current,transitionMatrix):
     transitionName = [["NN","NL","NH"],["LN","LL","LH"],["HN","HL","HH"]]
     # Choose the starting state
     states = current
     rainStatusToday = str(states)
-    if(isPrint):
-      print("Start state: " + rainStatusToday)
     # Shall store the sequence of states taken. So, this only has the starting state for now.
-    floodStatusList = [rainStatusToday]
+    rainStatusList = [rainStatusToday]
     i = 0
-    # To calculate the probability of the floodStatusList
+    # To calculate the probability of the rainStatusList
     prob = 1
     while i != days:
         if rainStatusToday == "NoRain":
             change = np.random.choice(transitionName[0],replace=True,p=transitionMatrix[0])
             if change == "NN":
                 prob = prob * transitionMatrix[0][0]
-                floodStatusList.append("NoRain")
+                rainStatusList.append("NoRain")
                 pass
             elif change == "NL":
                 prob = prob * transitionMatrix[0][1]
                 rainStatusToday = "LightRain"
-                floodStatusList.append("LightRain")
+                rainStatusList.append("LightRain")
             elif change== "NH":
                 prob = prob * transitionMatrix[0][2]
                 rainStatusToday = "HeavyRain"
-                floodStatusList.append("HeavyRain")
+                rainStatusList.append("HeavyRain")
 
         elif rainStatusToday == "LightRain":
             change = np.random.choice(transitionName[1],replace=True,p=transitionMatrix[1])
             if change == "LN":
                 prob = prob * transitionMatrix[1][0]
                 rainStatusToday = "NoRain"
-                floodStatusList.append("NoRain")
+                rainStatusList.append("NoRain")
                 pass
             elif change == "LL":
                 prob = prob * transitionMatrix[1][1]
                 rainStatusToday = "LightRain"
-                floodStatusList.append("LightRain")
+                rainStatusList.append("LightRain")
             elif change == "LH":
                 prob = prob * transitionMatrix[1][2]
                 rainStatusToday = "HeavyRain"
-                floodStatusList.append("HeavyRain")
+                rainStatusList.append("HeavyRain")
 
         elif rainStatusToday == "HeavyRain":
             change = np.random.choice(transitionName[2],replace=True,p=transitionMatrix[2])
             if change == "HN":
                 prob = prob * transitionMatrix[2][0]
                 rainStatusToday = "NoRain"
-                floodStatusList.append("NoRain")
+                rainStatusList.append("NoRain")
                 pass
             elif change == "HL":
                 prob = prob * transitionMatrix[2][1]
                 rainStatusToday = "LightRain"
-                floodStatusList.append("LightRain")
+                rainStatusList.append("LightRain")
             elif change == "HH":
                 prob = prob * transitionMatrix[2][2]
                 rainStatusToday = "HeavyRain"
-                floodStatusList.append("HeavyRain")
+                rainStatusList.append("HeavyRain")
         i += 1
-    if(isPrint):
-      print("Possible states: " + str(floodStatusList))
-      print("End state after "+ str(days) + " days: " + rainStatusToday)
-      print("Probability of the possible sequence of states: " + str(prob))
-    return floodStatusList
+    return [rainStatusList, prob ]
 
 def accuracy(original_data, predicted_data):
   simillar_count = 0
@@ -183,7 +176,6 @@ def floodStatus_forecast(days, current, transitionMatrix):
     # Choose the starting state
     floodStatusToday = str(current)
     #floodStatusToday = "Warning"
-    print("Start state: " + floodStatusToday)
     # Shall store the sequence of states taken. So, this only has the starting state for now.
     floodStatusList = [floodStatusToday]
     i = 0
@@ -267,20 +259,17 @@ def floodStatus_forecast(days, current, transitionMatrix):
                 floodStatusToday = "Flood"
                 floodStatusList.append("Flood")
         i += 1
-    print("Possible states: " + str(floodStatusList))
-    print("End state after "+ str(days) + " days: " + floodStatusToday)
-    print("Probability of the possible sequence of states: " + str(prob))
+    return [floodStatusList, prob]
 
 ##############################################################################
 
 ##################### Rainfall forecasting Calculations #####################################
 sample_data_RF = pd.read_excel(str(
-    Path(__file__).resolve().parents[1]/"data"/"data.xlsx"),usecols='B:D')
+    Path(__file__).resolve().parents[1]/"markov"/"data"/"data.xlsx"),usecols='B:D')
 date = pd.read_excel(str(
-    Path(__file__).resolve().parents[1]/"data"/"data.xlsx"),usecols='A')
+    Path(__file__).resolve().parents[1]/"markov"/"data"/"data.xlsx"),usecols='A')
 
 columns = list(sample_data_RF)
-print(columns)
 
 
 days_to_forecast_RF= json.loads(sys.argv[1])
@@ -288,6 +277,7 @@ current_states_RF = json.loads(sys.argv[2])
 
 
 for i in columns:
+  temp_output={}
   #filter data for Batalagoda
   filtered_data = filterData(sample_data_RF[i])
   #changed status array
@@ -295,17 +285,24 @@ for i in columns:
   #calculate transition matrix
   t_matrix = CalculateTransitionMatrix(change_status_array,filtered_data)
 
-  RainFallForecast(int(days_to_forecast_RF[i]),str(current_states_RF[i]),t_matrix)
-  calc= RainFallForecast(len(filtered_data),filtered_data[0],t_matrix,False)
+  res_rain = RainFallForecast(int(days_to_forecast_RF[i]),str(current_states_RF[i]),t_matrix)
+  calc_acc= RainFallForecast(len(filtered_data),filtered_data[0],t_matrix)
 
-  acc= accuracy(filtered_data,calc)
-  print("Accuracy: %f"%acc)
+  acc= accuracy(filtered_data,calc_acc[0])
+
+  temp_output["transitionMatrix"] = t_matrix
+  temp_output['days']=int(days_to_forecast_RF[i])
+  temp_output['startState']=res_rain[0][0]
+  temp_output['endState']=res_rain[0][-1]
+  temp_output['probability']=res_rain[1]
+  temp_output['accuracy']=acc
+  output[i]=temp_output
 #################################################################################################
 
 
 ##################### Flood status forecasting Calculations #####################################
 sample_data_WL = pd.read_excel(str(
-    Path(__file__).resolve().parents[1]/"data"/"data.xlsx"),usecols='E')
+    Path(__file__).resolve().parents[1]/"markov"/"data"/"data.xlsx"),usecols='E')
 columns_WL = list(sample_data_WL)
 days_to_forecast_FLOOD = sys.argv[3]
 current_states_FlOOD = sys.argv[4]
@@ -430,6 +427,17 @@ for i in columns_WL:
   [WNCount/(WNCount+WCCount+WWCount+WFCount),WCCount/(WNCount+WCCount+WWCount+WFCount),WWCount/(WNCount+WCCount+WWCount+WFCount),WFCount/(WNCount+WCCount+WWCount+WFCount)],
   [FNCount/(FNCount+FCCount+FWCount+FFCount),FCCount/(FNCount+FCCount+FWCount+FFCount),FWCount/(FNCount+FCCount+FWCount+FFCount),FFCount/(FNCount+FCCount+FWCount+FFCount)]]
 
-  floodStatus_forecast(int(days_to_forecast_FLOOD), str(current_states_FlOOD),transitionMetrix)
+  flood_res = floodStatus_forecast(int(days_to_forecast_FLOOD), str(current_states_FlOOD),transitionMetrix)
+  calc_acc = floodStatus_forecast(len(floodStatusArray),floodStatusArray[0],transitionMetrix)
+  acc = accuracy(floodStatusArray,calc_acc[0] )
+  temp_output={}
+  temp_output["transitionMatrix"] = transitionMetrix
+  temp_output['days']=int(days_to_forecast_FLOOD)
+  temp_output['startState']=flood_res[0][0]
+  temp_output['endState']=flood_res[0][-1]
+  temp_output['probability']=flood_res[1]
+  output['flood']=temp_output
+  temp_output['accuracy']=acc
+
 #########################################################################################################
-print('python script executed')
+print(json.dumps(output))
