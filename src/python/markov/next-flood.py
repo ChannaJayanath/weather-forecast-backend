@@ -352,7 +352,7 @@ for col in columns_WL:
   acc = accuracy(floodStatusArray,calc_acc[0] )
   temp_output={}
   temp_output["transitionMatrix"] = transitionMetrix
-  temp_output['days']=len(flood_res[0])
+  temp_output['days']=len(flood_res[0]) - 1
   temp_output['startState']=flood_res[0][0]
   temp_output['endState']=flood_res[0][-1]
   temp_output['possibleStates']=flood_res[0]
@@ -361,4 +361,4 @@ for col in columns_WL:
   output['flood_' + col]=temp_output
 
 #########################################################################################################
-print(output)
+print(json.dumps(output))

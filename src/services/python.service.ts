@@ -88,6 +88,26 @@ export class PythonService {
       console.log('We finished here python service');
     }
   }
+
+  async getNextFlood(req: getStatesReq) {
+    let current_FS = req.currentFloodState;
+    var RunOptions: Options = {
+      mode: 'text',
+      args: [current_FS],
+    };
+    try {
+      let result: any = await pyRunAsync(
+        path.join(__dirname, '../../src/python/markov/next-flood.py'),
+        <Options>RunOptions,
+      );
+      // console.log(JSON.parse(result));
+      return JSON.parse(result[0]);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      console.log('We finished here python service');
+    }
+  }
 }
 export const PYTHON_SERVICE = BindingKey.create<PythonService>(
   'service.pythonService',

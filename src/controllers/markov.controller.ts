@@ -10,6 +10,11 @@ export class MarkovController {
     console.log(req);
     return await this.pythonService.markovGetStatus(req);
   }
+  @post('markov/getNextFlood')
+  async getNextFlood(@requestBody() req: getStatesReq) {
+    console.log(req);
+    return await this.pythonService.getNextFlood(req);
+  }
 }
 
 export interface getStatesReq {
