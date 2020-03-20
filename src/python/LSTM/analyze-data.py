@@ -2,6 +2,7 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 ###################### import data #################################
 df1 = pd.read_csv(str(Path(__file__).resolve().parents[1]/"LSTM"/"data"/"B.csv"))
@@ -153,5 +154,59 @@ def plot_corr(df,size=11):
 
 
 plot_corr(df)
+
+
+############################### Making Sequences ###################################
+
+# split a multivariate sequence into samples
+def split_sequences_daily(sequences, timeOffset):
+    X, y = list(), list()
+    for index, row in sequences.iterrows():
+        end_ix = index + timeOffset
+        # get size of final output sequence
+        arr_size = timeOffset.days + 1
+        # check if we are beyond the dataset
+        if (end_ix in sequences.index.values):
+            break
+        # gather input and output parts of the pattern
+        seq_x = sequences[index:end_ix][['water-level','Batalagoda_rain-fall','Btemperature','Kurunegala_rain-fall','Ktemperature','Mediyawa_rain-fall','Chilaw_rain-fall']].reset_index().values
+        seq_y = sequences[end_ix: end_ix]['water-level'].reset_index().values
+        # arr_size = timeOffset.hours + 1
+        #adding first timestep water level to x sequence
+        wl_seq = np.zeros(seq_x.shape[0])
+        wl_seq[0] = sequences[index:index][['water-level']].values
+        seq_x[:, -1] = wl_seq
+
+        if(sequences[index:end_ix][['water-level','Batalagoda_rain-fall','Btemperature','Kurunegala_rain-fall','Ktemperature','Mediyawa_rain-fall','Chilaw_rain-fall']].shape[0] >= arr_size):
+            X.append(seq_x)
+            y.append(seq_y)
+    return np.array(X) , np.array(y)
+
+ds_start, ds_end = '2012-11-01', '2012-12-31'
+X, y = split_sequences_daily(df[:], pd.DateOffset(days=5))
+
+sequence_index = 0
+ver_df = pd.DataFrame(X[:,sequence_index, 0:7],index=X[:,sequence_index, 0])
+ver_df.columns = ['time','Batalagoda_rain-fall','Btemperature','Kurunegala_rain-fall','Ktemperature','Mediyawa_rainfall','Chilaw_rainfall']
+
+sns.set(rc={'figure.figsize':(17, 10)})
+# Start and end of the date range to extract
+start, end = '2012-01-01', '2012-12-31'
+# start, end = '2019-09-07', '2019-09-08'
+# Plot daily and weekly resampled time series together
+fig, ax = plt.subplots()
+ax.plot(df['Ktemperature'][start:end], marker='', linestyle='-', linewidth=0.5, label='Original')
+ax.plot(df['Btemperature'][start:end], marker='', linestyle='-', linewidth=0.5, label='Original')
+ax.plot(ver_df['Ktemperature'][start:end], marker='.', markersize=4, linestyle='-', linewidth=0.7, label='Sequence')
+ax.plot(ver_df['Btemperature'][start:end], marker='.', markersize=4, linestyle='-', linewidth=0.7, label='Sequence')
+ax.set_ylabel('Temperature')
+ax.legend()
+ax.set_title("LSTM Chilaw WL Prediction")
+fig.savefig(str(Path(__file__).resolve().parents[1]/"LSTM"/"graphs"/"sequence"/"1.png"), bbox_inches='tight')
+plt.close(fig)
+
+
+
+
 
 print('done')
