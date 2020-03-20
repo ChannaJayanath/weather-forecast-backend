@@ -108,6 +108,25 @@ export class PythonService {
       console.log('We finished here python service');
     }
   }
+
+  async generateAnalizeGrapgsForLSTM() {
+    var RunOptions: Options = {
+      mode: 'text',
+      args: [],
+    };
+    try {
+      let result: any = await pyRunAsync(
+        path.join(__dirname, '../../src/python/LSTM/analyze-data.py'),
+        <Options>RunOptions,
+      );
+      // console.log(JSON.parse(result));
+      return result[0];
+    } catch (e) {
+      console.log(e);
+    } finally {
+      console.log('We finished here python service');
+    }
+  }
 }
 export const PYTHON_SERVICE = BindingKey.create<PythonService>(
   'service.pythonService',
