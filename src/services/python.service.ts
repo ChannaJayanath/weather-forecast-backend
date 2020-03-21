@@ -127,6 +127,47 @@ export class PythonService {
       console.log('We finished here python service');
     }
   }
+
+  async trainModelLSTM() {
+    var RunOptions: Options = {
+      mode: 'text',
+      args: [],
+    };
+    try {
+      let result: any = await pyRunAsync(
+        path.join(__dirname, '../../src/python/LSTM/train-model.py'),
+        <Options>RunOptions,
+      );
+      if (result) {
+        return 'done';
+      } else {
+        return 'failed';
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      console.log('We finished here python service');
+    }
+  }
+
+  async testModelLSTM() {
+    var RunOptions: Options = {
+      mode: 'text',
+      args: [],
+    };
+    try {
+      let result: any = await pyRunAsync(
+        path.join(__dirname, '../../src/python/LSTM/test-model.py'),
+        <Options>RunOptions,
+      );
+      // console.log(JSON.parse(result));
+      return JSON.parse(result[0]);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      console.log('We finished here python service');
+    }
+  }
 }
 export const PYTHON_SERVICE = BindingKey.create<PythonService>(
   'service.pythonService',
