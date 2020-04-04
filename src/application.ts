@@ -1,5 +1,5 @@
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import {ApplicationConfig, BindingKey} from '@loopback/core';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
 import {
@@ -10,7 +10,14 @@ import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
 import {PythonService} from './services';
+export interface PackageInfo {
+  name: string;
+  version: string;
+  description: string;
+}
+export const PackageKey = BindingKey.create<PackageInfo>('application.package');
 
+const pkg: PackageInfo = require('../package.json');
 export class WeatherForecastApplication extends BootMixin(
   ServiceMixin(RepositoryMixin(RestApplication)),
 ) {
@@ -28,6 +35,7 @@ export class WeatherForecastApplication extends BootMixin(
       path: '/explorer',
     });
     this.component(RestExplorerComponent);
+    this.setUpBindings();
     this.bind('service.pythonService').toClass(PythonService);
     this.projectRoot = __dirname;
     // Customize @loopback/boot Booter Conventions here
@@ -39,5 +47,11 @@ export class WeatherForecastApplication extends BootMixin(
         nested: true,
       },
     };
+  }
+
+  setUpBindings(): void {
+    // Bind package.json to the application context
+    this.bind(PackageKey).to(pkg);
+
   }
 }
