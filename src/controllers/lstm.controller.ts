@@ -12,7 +12,8 @@ export class LstmController {
 
   @get('LSTM/model/train')
   async modelTrainLSTM() {
-    return await this.pythonService.trainModelLSTM();
+    await this.pythonService.trainModelLSTM();
+    return true;
   }
 
   @get('LSTM/model/test')
