@@ -138,7 +138,7 @@ ax.plot(test_df['estimated'][:], marker='.', markersize=8, linestyle='-', linewi
 ax.set_ylabel('Water Height')
 ax.legend()
 ax.set_title("LSTM Chillaw WL Prediction")
-fig.savefig(str(Path(__file__).resolve().parents[1]/"LSTM"/"graphs"/"test"/"1.png"), bbox_inches='tight')
+fig.savefig(str(Path(__file__).resolve().parents[1]/"LSTM"/"graphs"/"analyze"/"6.png"), bbox_inches='tight')
 plt.close(fig)
 
 output['isGraphCreated'] = True

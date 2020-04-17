@@ -202,7 +202,7 @@ ax.plot(ver_df['Btemperature'][start:end], marker='.', markersize=4, linestyle='
 ax.set_ylabel('Temperature')
 ax.legend()
 ax.set_title("LSTM Chilaw WL Prediction")
-fig.savefig(str(Path(__file__).resolve().parents[1]/"LSTM"/"graphs"/"sequence"/"1.png"), bbox_inches='tight')
+fig.savefig(str(Path(__file__).resolve().parents[1]/"LSTM"/"graphs"/"analyze"/"7.png"), bbox_inches='tight')
 plt.close(fig)
 
 

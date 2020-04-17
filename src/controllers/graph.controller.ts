@@ -7,6 +7,7 @@ export class GraphController {
 
   @get('graph/LSTM/analyze')
   async LSTManalyze() {
-    return await this.pythonService.generateAnalizeGrapgsForLSTM();
+    await this.pythonService.generateAnalizeGrapgsForLSTM();
+    return true;
   }
 }
